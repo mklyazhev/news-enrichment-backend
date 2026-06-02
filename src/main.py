@@ -8,6 +8,6 @@ app.include_router(news_router, prefix="/api/v1")
 app.include_router(enrichment_router, prefix="/api/v1")
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
+@app.get("/ping")
+def ping() -> dict[str, str]:
     return {"status": "ok"}

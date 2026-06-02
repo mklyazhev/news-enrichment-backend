@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_session
@@ -11,11 +12,13 @@ router = APIRouter(prefix="/news", tags=["news"])
 
 @router.post("", response_model=NewsRead, status_code=status.HTTP_201_CREATED)
 async def create_news(payload: NewsCreate, db: AsyncSession = Depends(get_session)) -> NewsArticle:
-    article = NewsArticle(**payload.model_dump(mode="json"))
+    article_data = payload.model_dump()
+    article_data["source_url"] = str(article_data["source_url"])
+    article = NewsArticle(**article_data)
     db.add(article)
     try:
         await db.commit()
-    except Exception as exc:  # noqa: BLE001
+    except IntegrityError as exc:
         await db.rollback()
         raise HTTPException(status_code=409, detail="news with this source_url already exists") from exc
     await db.refresh(article)
@@ -51,9 +54,23 @@ async def list_news(
     if source:
         filters.append(NewsArticle.source == source)
     if category:
-        filters.append(NewsArticle.categories.contains([category]))
+        filters.append(
+            text(
+                "EXISTS ("
+                "SELECT 1 FROM json_array_elements_text(news_articles.categories) AS category_item(value) "
+                "WHERE category_item.value = :category_filter"
+                ")"
+            ).bindparams(category_filter=category)
+        )
     if tag:
-        filters.append(NewsArticle.tags.contains([tag]))
+        filters.append(
+            text(
+                "EXISTS ("
+                "SELECT 1 FROM json_array_elements_text(news_articles.tags) AS tag_item(value) "
+                "WHERE tag_item.value = :tag_filter"
+                ")"
+            ).bindparams(tag_filter=tag)
+        )
     if author:
         filters.append(NewsArticle.author == author)
     if enriched is not None:

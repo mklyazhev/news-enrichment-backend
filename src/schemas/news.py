@@ -40,6 +40,7 @@ class NewsRead(BaseModel):
     region: str | None
     topic: str | None
     has_video: bool
+    parser_version: str | None
     enriched_at: datetime | None
     enrichment_error: str | None
 
