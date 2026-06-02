@@ -29,7 +29,7 @@ Backend-сервис для обогащения новостных карточ
 
 В качестве первого поддерживаемого источника выбран РИА Новости. Для `ria.ru` используется `RiaNewsParser`. Для остальных сайтов используется `GenericArticleParser`.
 
-## Как Работает Обогащение
+## Как работает обогащение
 
 ```text
 POST /api/v1/enrichment/jobs
@@ -44,7 +44,7 @@ POST /api/v1/enrichment/jobs
 
 PostgreSQL хранит состояние: метаданные новости, поля для обогащения, статусы задач и ошибки. Redis используется как broker для Celery.
 
-## Поля Обогащения
+## Поля обогащения
 
 Сервис сохраняет:
 
@@ -61,7 +61,7 @@ PostgreSQL хранит состояние: метаданные новости,
 - `region`, `topic`, `has_video` - дополнительные метаданные;
 - `parser_version`, `enriched_at`, `enrichment_error` - техническая информация об обогащении.
 
-## Запуск Через Docker Compose
+## Запуск через Docker Compose
 
 ```bash
 docker compose up -d --build
